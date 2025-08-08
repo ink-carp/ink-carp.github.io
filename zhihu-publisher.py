@@ -29,7 +29,8 @@ def process_for_zhihu():
         with open(str(args.input), 'rb') as f:
             s = f.read()
             chatest = chardet.detect(s)
-            args.encoding = chatest['encoding']
+            # 如果chardet无法检测编码，默认使用utf-8
+            args.encoding = chatest['encoding'] if chatest['encoding'] else 'utf-8'
         print(chatest)
     with open(str(args.input),"r",encoding=args.encoding) as f:
         lines = f.read()
@@ -43,8 +44,9 @@ def process_for_zhihu():
 
 # Deal with the formula and change them into Zhihu original format
 def formula_ops(_lines):
-    _lines = re.sub('((.*?)\$\$)(\s*)?([\s\S]*?)(\$\$)\n', '\n<img src="https://www.zhihu.com/equation?tex=\\4" alt="\\4" class="ee_img tr_noresize" eeimg="1">\n', _lines)
-    _lines = re.sub('(\$)(?!\$)(.*?)(\$)', ' <img src="https://www.zhihu.com/equation?tex=\\2" alt="\\2" class="ee_img tr_noresize" eeimg="1"> ', _lines)
+    # 使用原始字符串r''避免转义序列问题
+    _lines = re.sub(r'((.*?)\$\$)(\s*)?([\s\S]*?)(\$\$)\n', '\n<img src="https://www.zhihu.com/equation?tex=\\4" alt="\\4" class="ee_img tr_noresize" eeimg="1">\n', _lines)
+    _lines = re.sub(r'(\$)(?!\$)(.*?)(\$)', ' <img src="https://www.zhihu.com/equation?tex=\\2" alt="\\2" class="ee_img tr_noresize" eeimg="1"> ', _lines)
     return _lines
 
 # The support function for image_ops. It will take in a matched object and make sure they are competible
@@ -107,7 +109,8 @@ def image_ops(_lines):
 
 # Deal with table. Just add a extra \n to each original table line
 def table_ops(_lines):
-    return re.sub("\|\n",r"|\n\n", _lines)
+    # 使用原始字符串r''避免转义序列问题
+    return re.sub(r"\|\n",r"|\n\n", _lines)
 
 
 def reduce_single_image_size(image_path):
